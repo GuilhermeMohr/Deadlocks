@@ -2,17 +2,9 @@ import threading
 import time
 import random
 import datetime
+from enum import Enum
 
 terminate = False
-
-# outputList = []
-# def terminal():
-#     while not terminate:
-#         time.sleep(random.randint(0.5))
-#         if any(outputList):
-#             for output in outputList:
-#                 print(" | " + output)
-#             print(" |")   
 
 class Valor:
     def __init__(self, item_id, name, transação):
@@ -25,6 +17,17 @@ class Valor:
     fila = []
     valor_lock = False
 
+class Color(Enum):
+    CYAN = 36
+    RED = 31
+    GREEN = 32
+    BLUE = 34
+    YELLOW = 33
+    MAGENTA = 35
+
+def assignColor(color : Color, message : str):
+    return "\033[" + str(color.value) + "m" + message + "\033[0m"
+
 x = Valor(1, "X", "")
 y = Valor(2, "Y", "")
 threads = []
@@ -34,21 +37,21 @@ def acessar():
         if (valor.valor_lock == True):
             currentTime = datetime.datetime.now()
             valor.fila.append(threading.current_thread().name)
-            print("Thread " + threading.current_thread().name + " bloqueada, esperando por " + valor.name)
+            print(assignColor(Color.CYAN, "Thread " + threading.current_thread().name + " travada, esperando por " + valor.name))
             while valor.valor_lock == True or valor.fila[0] != threading.current_thread().name:
                 if currentTime + datetime.timedelta(seconds=50) < datetime.datetime.now():
-                    print("Thread " + threading.current_thread().name + " espirou.")
+                    print(assignColor(Color.RED, "Thread " + threading.current_thread().name + " espirou."))
                     valor.fila.remove(threading.current_thread().name)
                     return False
                 time.sleep(1)
             valor.fila.remove(threading.current_thread().name)        
         
         valor.valor_lock = True
-        print(valor.name + " bloqueado por " + threading.current_thread().name)
+        print(assignColor(Color.YELLOW, valor.name + " bloqueado por " + threading.current_thread().name))
         time.sleep(random.randint(1,5))
         return True
 
-    print("\n" + threading.current_thread().name + " começa sua execução.")
+    print(assignColor(Color.GREEN, "\n" + threading.current_thread().name + " começa sua execução."))
 
     time.sleep(random.randint(1,5))
     if not value_lock(x):
@@ -60,15 +63,15 @@ def acessar():
         return
 
     x.valor_lock = False
-    print("X desbloqueado por " + threading.current_thread().name)
+    print(assignColor(Color.BLUE, "X desbloqueado por " + threading.current_thread().name))
     time.sleep(random.randint(1,5))
     y.valor_lock = False
-    print("Y desbloqueado por " + threading.current_thread().name)
+    print(assignColor(Color.BLUE, "Y desbloqueado por " + threading.current_thread().name))
     time.sleep(random.randint(1,5))
 
     threads.remove(threading.current_thread())
 
-    print(threading.current_thread().name + " termina sua execução.")
+    print(assignColor(Color.MAGENTA, threading.current_thread().name + " termina sua execução."))
 
 def threadsBuild():
     while not terminate:
